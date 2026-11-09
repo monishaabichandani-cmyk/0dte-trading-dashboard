@@ -106,39 +106,89 @@ pointRadius:0,
 spanGaps:false,
 tension:0.15
 }));
-chart=new Chart(el('chart'),{
-type:'line',
-data:{labels:bars.map(b=>b.time||''),datasets},
-options:{responsive:true,maintainAspectRatio:false,
-interaction:{mode:'index',intersect:false},
-plugins:{legend:{labels:{color:'#eaf1ff'}}},
-scales:{x:{ticks:{color:'#9aabc7',maxTicksLimit:10}},
-y:{ticks:{color:'#9aabc7'}}}}
+
+chart = new Chart(el('chart'), {
+  type: 'line',
+  data: {
+    labels: bars.map(b => b.time || ''),
+    datasets: datasets
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: {
+      mode: 'index',
+      intersect: false
+    },
+    plugins: {
+      legend: {
+        labels: {
+          color: '#eaf1ff'
+        }
+      }
+    },
+    scales: {
+      x: {
+        ticks: {
+          color: '#9aabc7',
+          maxTicksLimit: 10
+        }
+      },
+      y: {
+        ticks: {
+          color: '#9aabc7'
+        }
+      }
+    }
+  }
 });
+
 }
-async function loadData(){
-try{
-const response=await fetch('./dashboard-data.json?refresh='+Date.now(),{cache:'no-store'});
-if(!response.ok)throw Error('Snapshot not published yet');
-const data=await response.json();
-if(!data||data.schema_version!==1||!data.symbols)throw Error('Unexpected snapshot format');
-snapshot=data;
-const timestamp=Date.parse(data.generated_at_utc);
-const age=Date.now()-timestamp;
-const stale=!Number.isFinite(age)||age>15*60*1000||age< -60000;
-el('status').textContent=stale?'Historical or stale snapshot — not live':'Recent market snapshot available';
-el('updated').textContent='Snapshot generated: '+(data.generated_at_et||data.generated_at_utc||'unknown')+' | Source: Tradier | Real-time entitlement unverified';
-render();
-}catch(err){
-snapshot=null;
-el('status').textContent='Waiting for first snapshot';
-el('updated').textContent='No dashboard-data.json published yet. Check after the next market-hours scanner run.';
-render();
+async function loadData() {
+  try {
+    const response = await fetch(
+      './dashboard-data.json?refresh=' + Date.now(),
+      { cache: 'no-store' }
+    );
+
+    if (!response.ok) {
+      throw new Error('Unable to load dashboard data');
+    }
+
+    const data = await response.json();
+
+    if (data.schema_version !== 1 || !data.symbols) {
+      throw new Error('Unexpected snapshot format');
+    }
+
+    snapshot = data;
+
+    const timestamp = Date.parse(data.generated_at_utc);
+    const age = Date.now() - timestamp;
+    const stale = !Number.isFinite(age) ||
+                  age > 15 * 60 * 1000 ||
+                  age < -60000;
+
+    el('status').textContent = stale
+      ? 'Historical or stale snapshot — not live'
+      : 'Recent market snapshot available';
+
+    el('updated').textContent =
+      'Snapshot generated: ' +
+      (data.generated_at_et || data.generated_at_utc) +
+      ' | Source: Tradier | Real-time status unverified';
+
+    render();
+  } catch (err) {
+    console.error('Dashboard loading error:', err);
+    el('status').textContent = 'Dashboard data loading error';
+    el('updated').textContent = err.message;
+  }
 }
-}
+
 render();
 loadData();
-setInterval(loadData,60000);
+setInterval(loadData, 60000);
 </script>
 </body>
 </html>
