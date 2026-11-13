@@ -121,7 +121,9 @@ const symbols=['SPY','QQQ','TSLA','NVDA','AMD','AAPL','MSFT','AMZN','GOOGL','SPC
 
 // Set this only after deploying a secure, read-only HTTPS API.
 // Never put Tradier or Telegram credentials in this file.
-const RAILWAY_FEED_URL='';
+
+const RAILWAY_FEED_URL='https://wonderful-communication-production-db89a4e2.up.railway.app/api/dashboard';
+
 
 let snapshot=null,selected='SPY',chart=null,feedBusy=false;
 const el=id=>document.getElementById(id);
